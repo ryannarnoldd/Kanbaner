@@ -6,23 +6,27 @@ interface JwtPayload {
 }
 
 export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
-  const headers = req.headers;
+  // Gets header authorization information.
+  const authorHeader = req.headers.authorization;
 
-  if (headers.authorization !== undefined) {
-    const token = headers.authorization.split(' ')[1];
+  if (authorHeader) { 
+    const token =  authorHeader.split(' ')[1];
 
-    const key = process.env.JWT_SECRET_KEY || 'ex';
+    // Gets key
+    const secretKey = process.env.JWT_SECRET_KEY || '';
 
-    jwt.verify(token, key, (_err, user) => {
-      try {
-        req.user = user as JwtPayload;
-        return next();
+    jwt.verify(token, secretKey , (err, user) => {
+      if (err) {
+        return res.sendStatus(403);
       }
-      catch(err) {
-        return res.sendStatus(402);
-      }
-    })
-  } else {
-    res.sendStatus(404);
-  }
+
+    // Gets User as Payload (str)
+    req.user = user as JwtPayload;
+
+
+    return next();
+  });
+} else {
+  res.sendStatus(402);
+}
 };

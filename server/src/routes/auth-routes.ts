@@ -1,31 +1,35 @@
+
 import { Router, Request, Response } from 'express';
 import { User } from '../models/user.js';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 
 export const login = async (req: Request, res: Response) => {
+
   // TODO: If the user exists and the password is correct, return a JWT token
-  const { username, password } = req.body;
+  const { username, password  } = req.body;
 
-  const user = await User.findOne({
-    where: {username},
-  });
+const user = await User.findOne({
+  where: {username},
+});
 
-  if (!user) {
-    return res.status(401).json({message: 'Authentication Failed'});
-  }
+if (!user) {
+  return res.status(401).json({message: 'Authentication Failed'});
+}
 
-  const isPasswordValid = await bcrypt.compare(password, user.password);
+// If the password checks out
+const passwordValid = await bcrypt.compare(password, user.password);
 
-  if (!isPasswordValid) {
-    return res.status(403).json({message: 'No Authentication'});
-  }
+if (!passwordValid) {
+  return res.status(401).json({message: 'Authentication Failed'});
+}
 
-  const secretKey = process.env.JWT_SECRET_KEY || 'ex';
+const secretKey = process.env.JWT_SECRET_KEY || '';
 
-  const token = jwt.sign({username}, secretKey, {expiresIn: '1h'});
+// Signs in using the secret key, with expiration of only 1 hour.
+const token = jwt.sign({username}, secretKey, {expiresIn: '1h'});
 
-  return res.json({token});
+return res.json({token});
 
 };
 
